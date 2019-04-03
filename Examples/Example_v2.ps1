@@ -1,4 +1,4 @@
-﻿import-module FormCreator -force
+﻿Import-Module FormCreator -force
 
 # ------------------------------------------------------------------
 # Form config

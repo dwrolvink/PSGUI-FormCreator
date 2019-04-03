@@ -1,4 +1,6 @@
-﻿# Form config
+﻿Import-Module FormCreator -force
+
+# Form config
 # ------------------------------------------------------------------
 $ElementMargin = 2                            # 0
 $FormPadding   = 30                           # 30
