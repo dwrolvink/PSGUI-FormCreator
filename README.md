@@ -21,6 +21,16 @@ $title = New-Element -Type Label -Name 'l_Title'  -Text "New User" -Width $Colum
 $title.Font = New-Object System.Drawing.Font("Calibri",12,[System.Drawing.FontStyle]::Underline)
 ```
 
+## Demo script
+[See here for a demonstration](Examples/Example_v2.ps1)
+
+## Installation
+1. Pick a path from your `$env:PSModulePath`
+2. Clone this repo to that path
+3. Change the name of the folder to 'FormCreator' 
+4. Start powershell, and type `Import-Module FormCreator` (to test -no errors is good-; it should already be loaded)
+
+
 ## Placement of elements
 The idea for placement is based on how you write text. There's a cursor that you can scroll from left to right, 
 and when it reaches the end of the page, it does CRLF (carriage return; line feed) so you scroll one line down, and go back 
@@ -40,8 +50,7 @@ is tied to that order. Any empty spaces should be filled with EmptySpace element
 New-Element -Type 'EmptySpace' -Name 'MaybeIshouldmakeNameNotRequired_ImNotSure' -Width 2
 ```
 
-## Demo script
-[See here for a demonstration](Examples/Example_v2.ps1)
+
 
 ## Further development
 The thing I hate most now is that for a script with two columns, I have to define two labels, and then two textboxes, instead of defining the label with the textbox:
@@ -62,8 +71,4 @@ New-Element -Group Name                 -Type Label   -Name 'l_Surname' -Text "S
 New-Element -Group Surname -PlaceGroup  -Type TextBox -Name 't_Surname'                 | Out-null
 ```
 
-## Installation
-1. Pick a path from your `$env:PSModulePath`
-2. Clone this repo to that path
-3. Change the name of the folder to 'FormCreator' 
-4. Start powershell, and type `Import-Module FormCreator` (to test -no errors is good-; it should already be loaded)
+
