@@ -317,7 +317,7 @@
                 $HighestHeight = $Height
             }
 
-            ElseIf ($Width -gt $HighestWidth){
+            If ($Width -gt $HighestWidth){
                 $HighestWidth = $Width
             }
         }
