@@ -55,8 +55,8 @@ New-Element -Type TextBox -Name 't_Surname'                 | Out-null
 I'll be thinking about creating a group, which will then be placed as a single element in the grid.
 Something along these lines:
 ```powershell
-New-Element -Group Name             -Type Label   -Name 'l_Name' -Text "Name" | Out-null 
-New-Element -Group Name -PlaceGroup -Type TextBox -Name 't_Name'              | Out-null
+New-Element -Group Name                 -Type Label   -Name 'l_Name'    -Text "Name"    | Out-null 
+New-Element -Group Name -PlaceGroup     -Type TextBox -Name 't_Name'                    | Out-null
 
 New-Element -Group Name                 -Type Label   -Name 'l_Surname' -Text "Surname" | Out-null
 New-Element -Group Surname -PlaceGroup  -Type TextBox -Name 't_Surname'                 | Out-null
