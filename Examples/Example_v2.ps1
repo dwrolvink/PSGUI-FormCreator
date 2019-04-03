@@ -1,4 +1,4 @@
-﻿#import-module InfraManager -force
+﻿import-module FormCreator -force
 
 # ------------------------------------------------------------------
 # Form config
