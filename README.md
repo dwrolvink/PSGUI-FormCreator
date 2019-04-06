@@ -22,7 +22,7 @@ $title.Font = New-Object System.Drawing.Font("Calibri",12,[System.Drawing.FontSt
 ```
 
 ## Demo script
-[See here for a demonstration](Examples/Example_v2.ps1)
+[See here for a demonstration](Examples/Example_v3.ps1)
 
 ## Installation
 1. Pick a path from your `$env:PSModulePath`
@@ -32,43 +32,46 @@ $title.Font = New-Object System.Drawing.Font("Calibri",12,[System.Drawing.FontSt
 
 
 ## Placement of elements
+### Where elements are created
 The idea for placement is based on how you write text. There's a cursor that you can scroll from left to right, 
 and when it reaches the end of the page, it does CRLF (carriage return; line feed) so you scroll one line down, and go back 
 to the left.
 
-Scrolling happens per cell. A form is given a width, a number of columns, and a rowheight, and with that you can calculate the cellwidth and cellheight. When you scroll right, you update the `$form.CurrentColumn`(+1) and `$form.CurrentLeft` (+cellwidth) (which together make the 'Cursor').
+You can also place elements in a different manner. When you add `-Placement Below`, the element will be placed in the cell below the cursor. This is handy for when you have multiple columns, and want to group your labels with your textboxes:
+``` powershell
+New-Form -Columns 2
 
-When you create an element, it will be created at the `$form.CurrentTop`[px] and `$form.CurrentLeft`[px], and fill the entire cell, or span multiple cells if `-Height`[int] and/or `-Width`[int] are set (down and to the right).
-
-All of the above will be done automatically by the GUI class, but when you understand the mechanics, you can use the 'helper'
-functions like `$form.CRLF(n)` to tweak the `.psm1` functions, or even directly in your scripts when you're defining the elements!
-
-The basis though is that everything will be done via the module cmdlets (in the .psm1), and that the object methods are not 
-used. The idea is to fill up each cell, from left to right, top to bottom, and that the order in which you define elements 
-is tied to that order. Any empty spaces should be filled with EmptySpace elements:
-```powershell
-New-Element -Type 'EmptySpace' -Name 'MaybeIshouldmakeNameNotRequired_ImNotSure' -Width 2
-```
-
-
-
-## Further development
-The thing I hate most now is that for a script with two columns, I have to define two labels, and then two textboxes, instead of defining the label with the textbox:
-```powershell
+# Name
 New-Element -Type Label   -Name 'l_Name'    -Text "Name"    | Out-null   
-New-Element -Type Label   -Name 'l_Surname' -Text "Surname" | Out-null
+New-Element -Type TextBox -Name 't_Name' -Placement Below   | Out-null
 
-New-Element -Type TextBox -Name 't_Name'                    | Out-null
-New-Element -Type TextBox -Name 't_Surname'                 | Out-null
+# Surname
+New-Element -Type Label   -Name 'l_Surname' -Text "Surname"   | Out-null
+New-Element -Type TextBox -Name 't_Surname' -Placement Below  | Out-null
 ```
-I'll be thinking about creating a group, which will then be placed as a single element in the grid.
-Something along these lines:
+
+If you add `-Placement OnNewLine`, the element will not be placed in the first available cell, but in the first available cell on column 0. 
+
+Note that when using `-Placement Below`, the cell under the cursor has to be empty, otherwise the creation of the element will be canceled.
+
+> The idea here is that choosing to forgo automatic placement means that you have a clear idea where you want your elements to go, and trying to place an element in an occupied cell should be made clear to the user in that case.
+
+### Skipping cells / rows
+You can skip a cell by calling `$Form.ScrollRight(1)`, which is currently the simplest solution, or by creating an empty element in the cell: `New-Element -Name e1 -Type EmptySpace -Width 1 | Out-Null`
+
+I'm leaning more to using empty elements for everything, but tbh, it seems bloaty and I'm not sure which route will be better going forward.
+
+One thing is, that the latter method is really flexible. The function `Add-EmptyRow()` for example, creates the following element:
 ```powershell
-New-Element -Group Name                 -Type Label   -Name 'l_Name'    -Text "Name"    | Out-null 
-New-Element -Group Name -PlaceGroup     -Type TextBox -Name 't_Name'                    | Out-null
-
-New-Element -Group Name                 -Type Label   -Name 'l_Surname' -Text "Surname" | Out-null
-New-Element -Group Surname -PlaceGroup  -Type TextBox -Name 't_Surname'                 | Out-null
+New-Element -Name e -Type EmptySpace -Width $Form.Columns -Placement "OnNewLine" | Out-Null
 ```
+The "OnNewLine" skips to the first empty cell on column 0 (where there is also room for the entire element, even if it spans more columns). `-Width $Form.Columns` says: max width.
+
+If you want to get really creative with jumping around, you could also use `$Form.MoveCursor($col, $row)`, to just move to the cell you want to without any fuss.
+
+### Calculating position and size (in px)
+In the creation phase, the position of the elements is completely virtual (i.e. only represented by row/column numbers). When Show-Form() is called, the actual position of each element is calculated based on rowheight, columnwidth, elementmargin, formpadding, and formwidth.
+
+Then, you can call `Export-Form()` to generate plain Powershell code to use in your applications, so you don't need to ship this package with your apps! When you have that code, you can start adding functions and breathe some life into your forms.
 
 
