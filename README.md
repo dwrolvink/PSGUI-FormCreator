@@ -54,6 +54,8 @@ New-Element -Name e -Type EmptySpace -Width $Form.Columns -Placement "OnNewLine"
 ```
 The "OnNewLine" skips to the first empty cell on column 0 (where there is also room for the entire element, even if it spans more columns). `-Width $Form.Columns` says: max width.
 
+If you want to get really creative with jumping around, you could also use `$Form.MoveCursor($col, $row)`, to just move to the cell you want to without any fuss.
+
 ### Calculation position and size (in px)
 In the creation phase, the position of the elements is completely virtual (i.e. only represented by row/column numbers). When Show-Form() is called, the actual position of each element is calculated based on rowheight, columnwidth, elementmargin, formpadding, and formwidth.
 
