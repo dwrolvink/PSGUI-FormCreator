@@ -105,4 +105,58 @@ Function Add-EmptyRow()
 
 }
 
+Function Export-Form()
+{
+    param($Form)
+
+    # If no explicit form is passed, load cached form
+    If (! ($Form)){
+        If (! ($script:FormCreator)){
+            New-Form | Out-Null
+        }
+        $Form = $script:FormCreator
+    }
+
+    # Init
+    $code = ""
+
+
+    # Form
+    $code += '$Form               = New-Object  System.Windows.Forms.Form'+"`n"
+    $code += '$Form.Size          = New-Object  System.Drawing.Size('+$Form.FormWidth+','+$Form.FormHeight+')'+"`n"
+    $code += '$Form.StartPosition = "CenterScreen"'+"`n"
+    $code += "`n"
+    
+
+    Foreach ($Element in  $Form.Elements)
+    {
+        $code += "`n"    
+        $code += '$'+$Element.Name+' = New-Object  System.Windows.Forms.'+$Element.GetType().Name+"`n"
+        $code += '$'+$Element.Name+'.Text      = "'+$Element.Text+'"'+"`n"
+        $code += '$'+$Element.Name+'.Top       = '+$Element.Top+"`n"
+        $code += '$'+$Element.Name+'.Left      = '+$Element.Left+"`n"
+        $code += '$'+$Element.Name+'.Width     = '+$Element.Width+"`n"
+        $code += '$'+$Element.Name+'.Height    = '+$Element.Height+"`n"
+        $code += '$'+$Element.Name+'.Margin    = 0'+"`n"
+        $code += '$'+$Element.Name+'.Padding   = '+$Element.Padding.All+"`n"
+        $code += '$'+$Element.Name+'.BackColor = "'+$Element.BackColor.Name+'"'+"`n"
+        $code += '$'+$Element.Name+'.TextAlign = "'+$Element.TextAlign+'"'+"`n"
+        
+        If ($Element.GetType().Name -eq 'TextBox'){
+            $code += '$'+$Element.Name+'.Multiline = $'+$Element.Multiline+"`n"
+        }
+
+        $code += '$Form.Controls.Add($'+$Element.Name+')'+"`n"
+    }
+    
+    $code += "`n"
+
+    $code += '$Form.ShowDialog()'
+    $code += "`n"
+    $code += "`n"
+
+    return $code
+}
+
+
 

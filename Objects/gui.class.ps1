@@ -84,33 +84,50 @@
         $this.OccupiedRowsInColumn  =  @($null) * $this.Columns
         
         # Create Form
-        $this.form              = New-Object  System.Windows.Forms.Form
+        $this.form               = New-Object  System.Windows.Forms.Form
         $this.form.Size          = New-Object  System.Drawing.Size($FormWidth,600) 
         $this.form.StartPosition = "CenterScreen"
         $this.form.Padding       = 0
 
     }
 
+
+    # -------------------------------------------------------------------------------------------------------
+    # Create elements
+    # -------------------------------------------------------------------------------------------------------
+
     # Called by New-Element cmdlet
-    [System.Windows.Forms.Control]NewElement($Name, $Type, $Placement, $Text, $Width, $Height, $Left, $Label)
+    [System.Windows.Forms.Control]
+    NewElement($Name, $Type, $Placement, $Text, $Width, $Height, $Left, $Label)
     {
         $obj = $null
 
+        # Set placement style
+        # -----------------------------
+        $FindFirstFree = $true
+        Switch ( $Placement )
+        {
+            "Bottom"  { $FindFirstFree = $False }
+            default   { $FindFirstFree = $True  }
+        }
 
         # Create object
         # -----------------------------
         Switch( $Type )
-        {
-            "Label"   { $obj = New-Object  System.Windows.Forms.Label  }
-
-            "Button"  { $obj = New-Object  System.Windows.Forms.Button }
-
-            "Textbox" { $obj = New-Object  System.Windows.Forms.TextBox}
-
+        { 
+            "Label"      { $obj = New-Object  System.Windows.Forms.Label  }
+            "Button"     { $obj = New-Object  System.Windows.Forms.Button }
+            "Textbox"    { $obj = New-Object  System.Windows.Forms.TextBox}
             "EmptySpace" { $obj = New-Object  System.Windows.Forms.Label  }
-
-             default   { $obj = New-Object  System.Windows.Forms.Label }
+             default     { $obj = New-Object  System.Windows.Forms.Label  }
         }
+
+        # Extend object
+        # -----------------------------
+        $obj | Add-Member -MemberType NoteProperty -Name Row    -Value 0
+        $obj | Add-Member -MemberType NoteProperty -Name Column -Value 0
+        $obj | Add-Member -MemberType NoteProperty -Name RowSpan    -Value $Height
+        $obj | Add-Member -MemberType NoteProperty -Name ColumnSpan -Value $Width
 
         # Basic element properties
         # -----------------------------
@@ -119,50 +136,67 @@
         $obj.Margin    = 0                           # we calculate our own margin, easier to calculate stuff that way
         $obj.Padding   = $this.ElementPaddding
         $obj.BackColor = $this.ElementBackgroundColor
-        
-        # Width/height is given in number of cols/rows; you need to subtract the margin from the definite size
-        $obj.Width     = ($Width  * $this.ColumnWidth) - ($this.ElementMargin * 2)
-        $obj.Height    = ($Height * $this.RowHeight)   - ($this.ElementMargin * 2)
 
         
         # Dynamic placement of element 
-        # (find the first vacant slot; where slot is the rectangle of cells needed for the element)
         # -----------------------------
         $Placed = $False
 
         While(! $Placed) # never give up, never surrender
         {
-            # If the current slot is occupied, move one step right, and try again
-            # (ScrollRight() will move down a line if the end of the row is reached)
-            If($this.isOccupied($this.CurrentRow, $this.CurrentColumn, $Width, $Height))
+            # Set location where we want the elements to be created
+            # ---------------
+            $targetRow = $this.CurrentRow
+            $targetColumn = $this.CurrentColumn
+
+            If ($Placement -eq 'Bottom'){
+                $targetRow += 1
+            }
+
+            # Find a slot
+            # ---------------
+            # Check if slot is vacant
+            If($this.isOccupied($targetRow, $targetColumn, $Width, $Height))
             {
-                $this.ScrollRight(1)
+                If ($FindFirstFree)
+                {
+                    If ($Placement -eq 'OnNewLine'){
+                        $this.CRLF(1)
+                    }
+                    Else {
+                        $this.ScrollRight(1)
+                    }
+
+                    Continue
+                }
+                Else
+                {
+                    Write-Host "Can't place element on ($targetColumn,$targetRow)"
+                    Return -1
+                }
             }
 
             # If slot is vacant, but not completely on the left, go down one line
-            Elseif ($Placement -eq 'OnNewLine' -and $this.CurrentColumn -ne 0)
+            If ($Placement -eq 'OnNewLine' -and $targetColumn -ne 0)
             {
                 $this.CRLF(1)
+                continue
             }
 
-            # We found our slot, let's place the element, and register the occupation
-            Else
-            {
-                # Set element location (at current cursor location)
-                $obj.Top  = $this.CurrentTop  + $this.ElementMargin
-                $obj.Left = $this.CurrentLeft + $this.ElementMargin
+            # Place element
+            # ---------------
+            # Set element location (at current cursor location)
+            $obj.Row = $targetRow
+            $obj.Column = $targetColumn
 
-                # I want to occupy:
-                $this.Occupy($this.CurrentRow, $this.CurrentColumn, $Width, $Height)
+            # I want to occupy:
+            $this.Occupy($targetRow, $targetColumn, $Width, $Height)
 
-                # Finally, time to move on
-                $Placed = $true
-            }
-
-            #Write-host "Row/col" $this.CurrentRow"/"$this.CurrentColumn
+            # Finally, time to move on
+            $Placed = $true
         }
 
-        
+
         # Type specific additions
         # Want to move a label just a tiny bit higher than other elements?
         # Or you want to hardcode the background color of textboxes?
@@ -174,7 +208,7 @@
                 $obj.TextAlign = "BottomLeft"
                 $obj.Padding = 0;
                 
-                $obj.Top  = $this.CurrentTop + (2*$this.ElementMargin) -2
+                #$obj.Top  = $this.CurrentTop + (2*$this.ElementMargin) -2
             }
             "TextBox" {
                 If ($Height -gt 1){ 
@@ -183,7 +217,7 @@
                 $obj.Padding = 10
                 $obj.BackColor = "White"
 
-                $obj.Top  = $this.CurrentTop + 2
+                #$obj.Top  = $this.CurrentTop + 2
 
             }
             "Button" {
@@ -195,13 +229,18 @@
         # -----------------------------
         $this.Elements += $obj
 
+
         Return $obj
     }
+
+    # -------------------------------------------------------------------------------------------------------
+    # Move around the form 
+    # -------------------------------------------------------------------------------------------------------
 
     ScrollRight($Cells)
     {
         # Advance Cursor Right
-        $this.CurrentLeft += ($Cells * $this.ColumnWidth)
+        #$this.CurrentLeft += ($Cells * $this.ColumnWidth)
         $this.CurrentColumn += $Cells
 
         # If advanced too far, press enter
@@ -209,6 +248,37 @@
             $this.CRLF(1)
         }
     }
+
+    MoveCursor($col, $row)
+    {
+        If ($col -gt ($this.Columns -1)){
+            Write-Error "Tried to move to column $col, out of bound" 
+            return
+        }
+
+        $this.CurrentColumn = $col
+        $this.CurrentRow    = $row
+    }
+
+    CRLF($Times)
+    {
+        # "Carriage return"
+        $this.CurrentColumn = 0
+
+        # "Line feed"
+        For($i=$Times; $i -gt 0; $i--){
+            # increment row
+            $this.CurrentRow += 1
+
+            # update how many rows we have (might be unused atm)
+            If($this.CurrentRow -gt $this.Rows){ $this.Rows = $this.CurrentRow}      
+        }
+    }
+
+
+    # -------------------------------------------------------------------------------------------------------
+    # Tests 
+    # -------------------------------------------------------------------------------------------------------
 
     [bool]isOccupied($row, $col, $Width=1, $Height=1)
     {
@@ -255,74 +325,54 @@
         Return $True
     }
 
+    # -------------------------------------------------------------------------------------------------------
+    # Printing
+    # -------------------------------------------------------------------------------------------------------
+
     ShowForm()
     {
-        # Set definite size
-        $this.CalcFormSize()
-        $DefiniteFormWidth = ($this.FormWidth)
-        $DefiniteFormHeight = ($this.FormHeight)
-        $this.form.Size = New-Object System.Drawing.Size($DefiniteFormWidth,$DefiniteFormHeight)
-
-        # Write-host "actual hight: " $this.form.height
+        # Init
+        $DefiniteFormWidth = 0
+        $DefiniteFormHeight = 0
 
         # Add elements to form
         Foreach($Element in $this.Elements)
         {
+            # Set position
+            $Element.Top  = $this.FormPadding  + $this.ElementMargin + ($this.RowHeight   * $Element.Row   ) 
+            $Element.Left = $this.FormPadding  + $this.ElementMargin + ($this.ColumnWidth * $Element.Column)
+
+            # Width/height is given in number of cols/rows; you need to subtract the margin from the definite size
+            $Element.Width     = ($Element.ColumnSpan  * $this.ColumnWidth) - ($this.ElementMargin * 2)
+            $Element.Height    = ($Element.RowSpan     * $this.RowHeight  ) - ($this.ElementMargin * 2)
+
+            # Update formwidth/height
+            $RightEdge = $Element.Width + $Element.Left
+            If ($RightEdge -gt $DefiniteFormWidth){
+                $DefiniteFormWidth = $RightEdge
+            }
+
+            $BottomEdge = $Element.Height + $Element.Top
+            If ($BottomEdge -gt $DefiniteFormHeight){
+                $DefiniteFormHeight = $BottomEdge
+            }
+
+            # Save
             $this.form.Controls.Add($Element)
-            # write-host "Name: " $Element.Name " Pos (Top/Left): ("$Element.Top","$Element.Left") Size(h/w): ("$Element.Height","$Element.Width") Text: " $Element.Text
+            #write-host "Name: " $Element.Name " Pos (Top/Left): ("$Element.Top","$Element.Left") Size(h/w): ("$Element.Height","$Element.Width") Text: " $Element.Text
         }
+
+        # Set definite size
+        $DefiniteFormWidth  += 15 + $this.ElementMargin + $this.FormPadding
+        $DefiniteFormHeight += 40 + $this.ElementMargin + $this.FormPadding
+
+        $this.FormWidth  = $DefiniteFormWidth
+        $this.FormHeight = $DefiniteFormHeight
+
+        $this.form.Size = New-Object System.Drawing.Size($DefiniteFormWidth,$DefiniteFormHeight)
 
         # Display form
         [void] $this.form.ShowDialog()    
     }
 
-    CR()
-    {
-        $this.CurrentLeft = $this.FormPadding
-        $this.CurrentColumn = 0
-    }
-
-    LF()
-    {
-        # increment row
-        $this.CurrentRow += 1
-        If($this.CurrentRow -gt $this.Rows){ $this.Rows = $this.CurrentRow}     
-        
-        # scroll one row down            
-        $this.CurrentTop += $this.RowHeight   
-    }
-
-    CRLF($Times)
-    {
-        $this.CR()
-
-        For($i=$Times; $i -gt 0; $i--){
-            $this.LF()
-        }
-    }
-
-    CalcFormSize()
-    {
-        $HighestWidth  = 0
-        $HighestHeight = 0
-
-        Foreach ($Element in $this.Elements)
-        {
-            $Height = $Element.Top + $Element.Height
-            $Width  = $Element.Left + $Element.Width
-
-            #Write-host "b" $Element.Name $Element.Top $Element.Height $Height  "highest:" $HighestHeight
-
-            If ($Height -gt $HighestHeight){
-                $HighestHeight = $Height
-            }
-
-            If ($Width -gt $HighestWidth){
-                $HighestWidth = $Width
-            }
-        }
-
-        $this.FormHeight = $HighestHeight + 40 + $this.ElementMargin + $this.FormPadding # topbar is added height
-        $this.FormWidth  = $HighestWidth  + 15 + $this.ElementMargin + $this.FormPadding
-    }
 }
