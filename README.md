@@ -22,7 +22,9 @@ $title.Font = New-Object System.Drawing.Font("Calibri",12,[System.Drawing.FontSt
 ```
 
 ## Demo script
-[See here for a demonstration](Examples/Example_v3.ps1)
+- [See here for a demonstration](Examples/Example_v3.ps1)
+- [Clean version of that script](Examples/Example_v3_clean.ps1)
+- [The powershell code that you can export](Examples/FC-vs-plain-powershell.ps1)
 
 ## Installation
 1. Pick a path from your `$env:PSModulePath`
