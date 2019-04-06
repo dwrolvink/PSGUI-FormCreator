@@ -37,7 +37,20 @@ The idea for placement is based on how you write text. There's a cursor that you
 and when it reaches the end of the page, it does CRLF (carriage return; line feed) so you scroll one line down, and go back 
 to the left.
 
-You can also place elements in a different manner. When you add `-Placement Below`, the element will be placed under the cursor. If you add `-Placement OnNewLine`, the element will not be placed in the first available cell, but in the first available cell on column 0. 
+You can also place elements in a different manner. When you add `-Placement Below`, the element will be placed in the cell below the cursor. This is handy for when you have multiple columns, and want to group your labels with your textboxes:
+``` powershell
+New-Form -Columns 2
+
+# Name
+New-Element -Type Label   -Name 'l_Name'    -Text "Name"    | Out-null   
+New-Element -Type TextBox -Name 't_Name' -Placement Below   | Out-null
+
+# Surname
+New-Element -Type Label   -Name 'l_Surname' -Text "Surname"   | Out-null
+New-Element -Type TextBox -Name 't_Surname' -Placement Below  | Out-null
+```
+
+If you add `-Placement OnNewLine`, the element will not be placed in the first available cell, but in the first available cell on column 0. 
 
 Note that when using `-Placement Below`, the cell under the cursor has to be empty, otherwise the creation of the element will be canceled.
 
@@ -56,7 +69,7 @@ The "OnNewLine" skips to the first empty cell on column 0 (where there is also r
 
 If you want to get really creative with jumping around, you could also use `$Form.MoveCursor($col, $row)`, to just move to the cell you want to without any fuss.
 
-### Calculation position and size (in px)
+### Calculating position and size (in px)
 In the creation phase, the position of the elements is completely virtual (i.e. only represented by row/column numbers). When Show-Form() is called, the actual position of each element is calculated based on rowheight, columnwidth, elementmargin, formpadding, and formwidth.
 
 Then, you can call `Export-Form()` to generate plain Powershell code to use in your applications, so you don't need to ship this package with your apps! When you have that code, you can start adding functions and breathe some life into your forms.
