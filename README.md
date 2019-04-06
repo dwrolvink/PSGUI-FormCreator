@@ -36,12 +36,12 @@ The idea for placement is based on how you write text. There's a cursor that you
 and when it reaches the end of the page, it does CRLF (carriage return; line feed) so you scroll one line down, and go back 
 to the left.
 
-Scrolling happens per cell. A form is given a width, a number of columns, and a rowheight, and with that you can calculate the cellwidth and cellheight. When you scroll right, you update the $form.CurrentColumn (+1) and $form.CurrentLeft (+cellwidth) (which together make the 'Cursor').
+Scrolling happens per cell. A form is given a width, a number of columns, and a rowheight, and with that you can calculate the cellwidth and cellheight. When you scroll right, you update the `$form.CurrentColumn`(+1) and `$form.CurrentLeft` (+cellwidth) (which together make the 'Cursor').
 
-When you create an element, it will be created at the $form.CurrentTop and $form.CurrentLeft, and fill the entire cell, or span multiple cells if `-Height` and/or `-Width` are set (down and to the right).
+When you create an element, it will be created at the `$form.CurrentTop`[px] and `$form.CurrentLeft`[px], and fill the entire cell, or span multiple cells if `-Height`[int] and/or `-Width`[int] are set (down and to the right).
 
 All of the above will be done automatically by the GUI class, but when you understand the mechanics, you can use the 'helper'
-functions like $form.CRLF(n) to tweak the `.psm1` functions, or even directly in your scripts when you're defining the elements!
+functions like `$form.CRLF(n)` to tweak the `.psm1` functions, or even directly in your scripts when you're defining the elements!
 
 The basis though is that everything will be done via the module cmdlets (in the .psm1), and that the object methods are not 
 used. The idea is to fill up each cell, from left to right, top to bottom, and that the order in which you define elements 
