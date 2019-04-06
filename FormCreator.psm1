@@ -139,7 +139,7 @@ Function Add-EmptyRow()
         $Form = $script:FormCreator
     }
 
-    New-Element -Name e -Type EmptySpace -Width $Form.Columns -Placement "OnNewLine" | Out-Null
+    New-Element -Name ('e_'+$Form.GenericElementCounter) -Type EmptySpace -Width $Form.Columns -Placement "OnNewLine" | Out-Null
 }
 
 Function Export-Form()

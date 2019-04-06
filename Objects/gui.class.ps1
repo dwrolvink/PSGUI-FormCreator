@@ -45,6 +45,8 @@
             
     # The actual Form:
     $form
+
+    $GenericElementCounter = 0
     
 
     FormCreator($FormWidth, $FormPadding, 
@@ -100,7 +102,7 @@
         $FindFirstFree = $true
         Switch ( $Placement )
         {
-            "Bottom"  { $FindFirstFree = $False }
+            "Below"  { $FindFirstFree = $False }
             default   { $FindFirstFree = $True  }
         }
 
@@ -142,7 +144,7 @@
             $targetRow = $this.CurrentRow
             $targetColumn = $this.CurrentColumn
 
-            If ($Placement -eq 'Bottom'){
+            If ($Placement -eq 'Below'){
                 $targetRow += 1
             }
 

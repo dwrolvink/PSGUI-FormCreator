@@ -15,10 +15,10 @@ $title      = New-Element -Type Label -Name 'l_TITLE'  -Text "New User" -Width $
 $title.Font = New-Object System.Drawing.Font("Calibri",12,[System.Drawing.FontStyle]::Underline)
 
 New-Element -Type Label   -Name 'l_Name'    -Text "Name"    | Out-null   
-New-Element -Type TextBox -Name 't_Name' -Placement Bottom  | Out-null
+New-Element -Type TextBox -Name 't_Name' -Placement Below  | Out-null
 
 New-Element -Type Label   -Name 'l_Surname' -Text "Surname"   | Out-null
-New-Element -Type TextBox -Name 't_Surname' -Placement Bottom | Out-null
+New-Element -Type TextBox -Name 't_Surname' -Placement Below | Out-null
 
 New-Element -Type Label   -Name 'l_Description'  -Text "Description" -Width $Columns  | Out-null
 New-Element -Type TextBox -Name 't_Description'           -Height 4  -Width $Columns  | Out-null
