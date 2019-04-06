@@ -48,7 +48,7 @@ New-Element -Type TextBox -Name 't_Name' -Placement Below  | Out-null
 New-Element -Type Label   -Name 'l_Surname' -Text "Surname"   | Out-null
 New-Element -Type TextBox -Name 't_Surname' -Placement Below | Out-null
 
-#Show-Form | Out-Null
+Show-Form | Out-Null
 
 
 
@@ -65,7 +65,7 @@ New-Element -Type TextBox -Name 't_Description'           -Height 4  -Width $Col
 New-Element -Type Label   -Name 'l_Notes'     -Text "Notes"        | Out-null
 New-Element -Type Label   -Name 'l_Submittor' -Text "Submitted by" | Out-null
 
-#Show-Form | Out-Null
+Show-Form | Out-Null
 
 
 <# -------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ New-Element -Type TextBox -Name 't_Submittor'                      | Out-null
 # Block
 New-Element -Type Button  -Name 'b_block' -Text "Block"   | Out-null
 
-#Show-Form | Out-Null 
+Show-Form | Out-Null 
 
 
 <# -------------------------------------------------------------------------------
@@ -90,7 +90,7 @@ New-Element -Type Button  -Name 'b_block' -Text "Block"   | Out-null
 # Save
 New-Element -Type Button  -Name 'b_save' -Text "Save"  -Placement 'OnNewLine'  | Out-null
 
-#Show-Form | Out-Null 
+Show-Form | Out-Null 
 
 
 <#
