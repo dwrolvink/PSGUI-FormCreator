@@ -60,6 +60,61 @@ Function New-Element()
     Return  $Form.NewElement($Name, $Type, $Placement, $Text, $Width, $Height, $Left, $Label)
 }
 
+
+
+Function Show-Form()
+{
+    param($Form)
+
+    # If no explicit form is given, show the cache form
+    If (! ($Form)){
+        $Form = $script:FormCreator
+    }
+
+    # Init
+    $DefiniteFormWidth = 0
+    $DefiniteFormHeight = 0
+
+    # Add elements to form
+    Foreach($Element in $Form.Elements)
+    {
+        # Set position
+        $Element.Top  = $Form.FormPadding  + $Form.ElementMargin + ($Form.RowHeight   * $Element.Row   ) 
+        $Element.Left = $Form.FormPadding  + $Form.ElementMargin + ($Form.ColumnWidth * $Element.Column)
+
+        # Width/height is given in number of cols/rows; you need to subtract the margin from the definite size
+        $Element.Width     = ($Element.ColumnSpan  * $Form.ColumnWidth) - ($Form.ElementMargin * 2)
+        $Element.Height    = ($Element.RowSpan     * $Form.RowHeight  ) - ($Form.ElementMargin * 2)
+
+        # Update formwidth/height
+        $RightEdge = $Element.Width + $Element.Left
+        If ($RightEdge -gt $DefiniteFormWidth){
+            $DefiniteFormWidth = $RightEdge
+        }
+
+        $BottomEdge = $Element.Height + $Element.Top
+        If ($BottomEdge -gt $DefiniteFormHeight){
+            $DefiniteFormHeight = $BottomEdge
+        }
+
+        # Save
+        $Form.form.Controls.Add($Element)
+        #write-host "Name: " $Element.Name " Pos (Top/Left): ("$Element.Top","$Element.Left") Size(h/w): ("$Element.Height","$Element.Width") Text: " $Element.Text
+    }
+
+    # Set definite size
+    $DefiniteFormWidth  += 15 + $Form.ElementMargin + $Form.FormPadding
+    $DefiniteFormHeight += 40 + $Form.ElementMargin + $Form.FormPadding
+
+    $Form.FormWidth  = $DefiniteFormWidth
+    $Form.FormHeight = $DefiniteFormHeight
+
+    $Form.form.Size = New-Object System.Drawing.Size($DefiniteFormWidth,$DefiniteFormHeight)
+
+    # Display form
+    $Form.form.ShowDialog()   
+}
+
 Function Add-FormControls()
 {
     param($Form)
@@ -74,19 +129,8 @@ Function Add-FormControls()
         $Form.CRLF(1)
     }
     New-Element -Name submit -Type Button -Text "Submit" -Placement "OnNewLine" | Out-Null
-    New-Element -Name submit -Type Button -Text "Cancel"                        | Out-Null
+    New-Element -Name cancel -Type Button -Text "Cancel"                        | Out-Null
 
-}
-
-Function Show-Form()
-{
-    param($Form)
-
-    # If no explicit form is given, show the cache form
-    If (! ($Form)){
-        $Form = $script:FormCreator
-    }
-    $Form.ShowForm()
 }
 
 Function Add-EmptyRow()
@@ -119,15 +163,12 @@ Function Export-Form()
 
     # Init
     $code = ""
-
-
-    # Form
     $code += '$Form               = New-Object  System.Windows.Forms.Form'+"`n"
     $code += '$Form.Size          = New-Object  System.Drawing.Size('+$Form.FormWidth+','+$Form.FormHeight+')'+"`n"
     $code += '$Form.StartPosition = "CenterScreen"'+"`n"
     $code += "`n"
     
-
+    # Add Elements
     Foreach ($Element in  $Form.Elements)
     {
         $code += "`n"    
@@ -146,11 +187,13 @@ Function Export-Form()
             $code += '$'+$Element.Name+'.Multiline = $'+$Element.Multiline+"`n"
         }
 
+
         $code += '$Form.Controls.Add($'+$Element.Name+')'+"`n"
     }
     
     $code += "`n"
 
+    # Print form
     $code += '$Form.ShowDialog()'
     $code += "`n"
     $code += "`n"
