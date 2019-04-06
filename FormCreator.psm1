@@ -16,12 +16,7 @@ Function New-Form()
         $Wrap=$true
     )
 
-    # write-host "cols: " $Columns
-
-    $script:FormCreator = [FormCreator]::new($FormWidth,$FormPadding, $ElementMargin, $ElementPaddding, $RowHeight, $Columns, $ElementBackgroundColor, $Wrap)
-
-    # Return pointer to form
-    return $script:FormCreator
+    return $script:FormCreator = [FormCreator]::new($FormWidth,$FormPadding, $ElementMargin, $ElementPaddding, $RowHeight, $Columns, $ElementBackgroundColor)
 }
 
 Function Get-Form()
@@ -38,7 +33,7 @@ Function New-Element()
         [Parameter(Mandatory = $true)]
         $Type, 
         [Parameter(Mandatory = $false)]
-        $Placement="Right", 
+        $Placement="FirstAva", 
         $Text, 
         $Height=1, 
         $Width=1, 
@@ -56,10 +51,10 @@ Function New-Element()
         $Form = $script:FormCreator
     }
 
-    # Create element
+    # I'd like to move this function to this .psm1 but when this function returns a form object, 
+    # it gets turned into a plain array. Weird behavior!
     Return  $Form.NewElement($Name, $Type, $Placement, $Text, $Width, $Height, $Left, $Label)
 }
-
 
 
 Function Show-Form()
@@ -112,7 +107,7 @@ Function Show-Form()
     $Form.form.Size = New-Object System.Drawing.Size($DefiniteFormWidth,$DefiniteFormHeight)
 
     # Display form
-    $Form.form.ShowDialog()   
+    $Form.form.ShowDialog()  
 }
 
 Function Add-FormControls()
@@ -124,13 +119,12 @@ Function Add-FormControls()
         $Form = $script:FormCreator
     }
 
-    If($Form.CurrentLeft -ne $Form.FormPadding)
+    If($Form.CurrentColumn -ne 0)
     {
         $Form.CRLF(1)
     }
     New-Element -Name submit -Type Button -Text "Submit" -Placement "OnNewLine" | Out-Null
     New-Element -Name cancel -Type Button -Text "Cancel"                        | Out-Null
-
 }
 
 Function Add-EmptyRow()
@@ -146,7 +140,6 @@ Function Add-EmptyRow()
     }
 
     New-Element -Name e -Type EmptySpace -Width $Form.Columns -Placement "OnNewLine" | Out-Null
-
 }
 
 Function Export-Form()
@@ -171,23 +164,62 @@ Function Export-Form()
     # Add Elements
     Foreach ($Element in  $Form.Elements)
     {
+        # General
+        # -------------
         $code += "`n"    
         $code += '$'+$Element.Name+' = New-Object  System.Windows.Forms.'+$Element.GetType().Name+"`n"
-        $code += '$'+$Element.Name+'.Text      = "'+$Element.Text+'"'+"`n"
+
+        If ($Element.Text)
+        { 
+            $code += '$'+$Element.Name+'.Text      = "'+$Element.Text+'"'+"`n" 
+        }
+
         $code += '$'+$Element.Name+'.Top       = '+$Element.Top+"`n"
         $code += '$'+$Element.Name+'.Left      = '+$Element.Left+"`n"
         $code += '$'+$Element.Name+'.Width     = '+$Element.Width+"`n"
         $code += '$'+$Element.Name+'.Height    = '+$Element.Height+"`n"
-        $code += '$'+$Element.Name+'.Margin    = 0'+"`n"
-        $code += '$'+$Element.Name+'.Padding   = '+$Element.Padding.All+"`n"
-        $code += '$'+$Element.Name+'.BackColor = "'+$Element.BackColor.Name+'"'+"`n"
-        $code += '$'+$Element.Name+'.TextAlign = "'+$Element.TextAlign+'"'+"`n"
-        
-        If ($Element.GetType().Name -eq 'TextBox'){
-            $code += '$'+$Element.Name+'.Multiline = $'+$Element.Multiline+"`n"
+       
+        If ($Element.Padding -ne 0){
+            $code += '$'+$Element.Name+'.Padding   = '+$Element.Padding.All+"`n"
         }
 
+        If ($Element.TextAlign -ne "Left"){
+            $code += '$'+$Element.Name+'.TextAlign = "'+$Element.TextAlign+'"'+"`n"
+        }
 
+        # Textbox 
+        # -------------
+        If ($Element.GetType().Name -eq 'TextBox')
+        {
+            # Multiline
+            $code += '$'+$Element.Name+'.Multiline = $'+$Element.Multiline+"`n"
+
+            # Background color
+            If ($Element.BackColor -ne "White"){
+                $code += '$'+$Element.Name+'.BackColor = "'+$Element.BackColor.Name+'"'+"`n"
+            }
+        }
+
+        # Label
+        # -------------
+        If ($Element.GetType().Name -eq 'Label')
+        {
+            # Background color
+            If ($Element.BackColor -ne "Control"){
+                $code += '$'+$Element.Name+'.BackColor = "'+$Element.BackColor.Name+'"'+"`n"
+            }
+
+            # Font
+            If($Element.Font.Size -ne 8.25 -or `
+                $Element.Font.FontFamily -ne 'Microsoft Sans Serif' -or `
+                $Element.Font.Underline)
+            {
+                $code += '$'+$Element.Name+'.Font      = New-Object System.Drawing.Font("'+$Element.Font.FontFamily.Name+'",'+$Element.Font.Size+',[System.Drawing.FontStyle]::'+$Element.Font.Style+')'+"`n"
+            }
+        }
+
+        # Print
+        # -------------
         $code += '$Form.Controls.Add($'+$Element.Name+')'+"`n"
     }
     
@@ -198,7 +230,7 @@ Function Export-Form()
     $code += "`n"
     $code += "`n"
 
-    return $code
+    Return $code
 }
 
 

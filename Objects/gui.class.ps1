@@ -22,10 +22,6 @@
     # ElementHeight = RowHeight - 2*ElementMargin
     $ElementMargin
     $ElementPaddding
-    
-    # Automatically go to next line if maximum number of elements on current row is reached
-    # Turning Wrap off is not tested well
-    $Wrap = $true
 
     # Random
     $ElementBackgroundColor
@@ -55,8 +51,7 @@
                 $ElementMargin, $ElementPaddding, 
                 $RowHeight, 
                 $Columns, 
-                $ElementBackgroundColor,
-                $Wrap                        )
+                $ElementBackgroundColor  )
     {
         # Set Config
         $this.FormWidth       = $FormWidth
@@ -67,8 +62,6 @@
         $this.Columns         = $Columns
 
         $this.ElementBackgroundColor = $ElementBackgroundColor
-
-        $this.Wrap            = $Wrap
 
         # Set state
         $this.CurrentRow        = 0
@@ -240,11 +233,10 @@
     ScrollRight($Cells)
     {
         # Advance Cursor Right
-        #$this.CurrentLeft += ($Cells * $this.ColumnWidth)
         $this.CurrentColumn += $Cells
 
         # If advanced too far, press enter
-        If($this.Wrap -and $this.CurrentColumn -gt $this.Columns-1){
+        If($this.CurrentColumn -gt ($this.Columns-1)){
             $this.CRLF(1)
         }
     }
